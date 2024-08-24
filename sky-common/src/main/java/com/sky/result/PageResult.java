@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PageResult implements Serializable {
-
+    // AllArgsConstructor会自动生成有参的构造方法
     private long total; //总记录数
 
     private List records; //当前页数据集合

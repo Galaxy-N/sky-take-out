@@ -37,5 +37,12 @@ public interface EmployeeMapper {
      * @return
      */
 
+    // Page是PageHelper插件提供的，本质是ArrayList的集合
     Page<Employee> pageQuery(EmployeePageQueryDTO employeePageQueryDTO);
+
+    /**
+     * 启用或禁用员工账号
+     * @param employee
+     */
+    void update(Employee employee);
 }

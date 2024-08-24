@@ -98,4 +98,20 @@ public class EmployeeController {
         PageResult pageResult = employeeService.pageQuery(employeePageQueryDTO);
         return Result.success(pageResult);
     }
+
+    /**
+     * 启用禁用员工账号
+     * @param status
+     * @param id
+     * @return
+     */
+    @PostMapping("/status/{status}")
+    @ApiOperation("启用禁用员工账号")
+    // 对于查询类的数据，返回需要指定的泛型
+    public Result startOrStop(@PathVariable Integer status, Long id){
+        // 路径类型的需要用PathVariable修饰，json类型的需要用RequestBody来修饰。id是通过地址栏传的参数，不需要修饰。
+        log.info("启用禁用员工账号：{}, {}", status, id);
+        employeeService.startOrStop(status, id);
+        return Result.success();
+    }
 }

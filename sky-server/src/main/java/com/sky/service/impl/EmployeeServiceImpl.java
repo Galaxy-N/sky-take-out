@@ -16,6 +16,7 @@ import com.sky.exception.PasswordErrorException;
 import com.sky.mapper.EmployeeMapper;
 import com.sky.result.PageResult;
 import com.sky.service.EmployeeService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,9 @@ import org.springframework.util.DigestUtils;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
+
 @Service
+@Slf4j
 public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
@@ -106,8 +109,35 @@ public class EmployeeServiceImpl implements EmployeeService {
         // select * from employee limit 0,10;
         // 开始分页查询
         PageHelper.startPage(employeePageQueryDTO.getPage(), employeePageQueryDTO.getPageSize());
-        Page<Employee> page = employeeMapper.pageQuery(employeePageQueryDTO);
+        //底层基于MyBatis的拦截器实现。将后面的sql进行动态的拼接。会动态地把limit关键字拼接进去，并且动态地计算。
+
+        Page<Employee> page = employeeMapper.pageQuery(employeePageQueryDTO); //这里PageHelper要求，返回值是Page
+        //从返回的Page对象中可以获取total（数据总数）、result（本页的数据集合）
+
+        // 最后的返回值要包装秤PageResult类型
         return new PageResult(page.getTotal(), page.getResult());
+    }
+
+    /**
+     * 启用或禁用员工账号
+     * @param status
+     * @param id
+     */
+    public void startOrStop(Integer status, Long id){
+        // update employee set status = ? where id = ?
+
+        /*Employee employee = new Employee();
+        employee.setStatus(status);
+        employee.setId(id);*/
+        Long userId=BaseContext.getCurrentId();
+        log.info("当前用户的id：{}", userId);
+        Employee employee = Employee.builder()
+                .status(status)
+                .id(id)
+                .updateUser(userId)
+                .updateTime(LocalDateTime.now())
+                .build();
+        employeeMapper.update(employee);
     }
 
 }

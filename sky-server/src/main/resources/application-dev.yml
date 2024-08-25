@@ -6,3 +6,8 @@ sky:
     database: sky_take_out
     username: root
     password: fsn123456
+  alioss:
+    endpoint: oss-cn-hangzhou.aliyuncs.com
+    access-key-id: LTAI5tBysM5W1pqizcZV8ded
+    access-key-secret: jjyAdOd4WhAZTNyyt66femDHnDrxTy
+    bucket-name: sky-take-out-fsn

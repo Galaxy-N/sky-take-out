@@ -15,6 +15,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface AutoFill {
     // 数据操作类型，update or insert
-    OperationType value();
-
+    OperationType value();      //声明一个方法，方法的返回值是枚举类型OperationType
+    // 使用@AutoFill注解时，会指定一个OperationType枚举常量作为注解的值
+    // @AutoFill(value = OperationType.UPDATE)，这里就是将OperationType.UPDATE作为注解的值
 }

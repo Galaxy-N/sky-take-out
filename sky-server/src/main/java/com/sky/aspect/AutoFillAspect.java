@@ -29,6 +29,7 @@ public class AutoFillAspect {
      * 切入点
      */
     @Pointcut("execution(* com.sky.mapper.*.*(..)) && @annotation(com.sky.annotation.AutoFill) ")
+    // 定义哪些方法会被拦截。这里需要同时满足两个条件。首先是操作数据库的函数，即mapper中的函数，其次需要被AutoFill注解
     // 拦截之后要为公共的字段赋值
     public void autoFillPointCut(){
 
@@ -40,6 +41,8 @@ public class AutoFillAspect {
     // 通知有多种：前置通知，后置通知，环绕通知，异常通知
     // 这里应该是前置通知，因为要在执行insert和update之前，就为公共字段赋值
     @Before("autoFillPointCut()")
+    // 在autoFillPointCut匹配的切点之前触发
+    // before表明要在注解标记的函数之前触发通知
     public void autoFill(JoinPoint joinPoint){
         log.info("开始进行公共字段字段填充...");
 

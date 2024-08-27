@@ -62,6 +62,9 @@ public interface SetmealMapper {
     @Select("select * from setmeal where id = #{id}")
     SetmealDTO queryById(Long id);
 
+    @Select("select * from setmeal where id = #{id}")
+    Setmeal getById(Long id);
+
     /**
      * 动态条件查询套餐
      * @param setmeal

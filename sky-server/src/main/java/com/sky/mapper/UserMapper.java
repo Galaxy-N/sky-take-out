@@ -19,4 +19,7 @@ public interface UserMapper {
      * @param user
      */
     void insert(User user);   // 这里需要返回主键值
+
+    @Select("select * from user where id = #{id}")
+    User getById(Long id);
 }

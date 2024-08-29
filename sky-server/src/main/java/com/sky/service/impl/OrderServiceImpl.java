@@ -7,10 +7,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
-import com.sky.dto.OrdersDTO;
-import com.sky.dto.OrdersPageQueryDTO;
-import com.sky.dto.OrdersPaymentDTO;
-import com.sky.dto.OrdersSubmitDTO;
+import com.sky.dto.*;
 import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
@@ -20,6 +17,7 @@ import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
+import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
 import com.sky.websocket.WebSocketServer;
@@ -363,11 +361,107 @@ public class OrderServiceImpl implements OrderService {
         for(Orders o : orders){
             OrderVO orderVO = new OrderVO();
             BeanUtils.copyProperties(o, orderVO);
-            List<OrderDetail> orderDetail = orderDetailMapper.getByOrderId(orderVO.getId());
-            orderVO.setOrderDishes(orderDetail.toString());
+            List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orderVO.getId());
+            String dishes="";
+            for (OrderDetail orderDetail: orderDetails ){
+                dishes+=orderDetail.getName()+"*"+orderDetail.getNumber()+";  ";
+            }
+            orderVO.setOrderDishes(dishes);
             orderVOS.add(orderVO);
         }
         log.info("订单查询：{}",orderVOS);
         return new PageResult(orderVOS.size(), orderVOS);
+    }
+
+
+    public OrderVO details(Long id){
+        Orders orders = orderMapper.getById(id);
+        if(orders == null){
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(id);
+        OrderVO orderVO = new OrderVO();
+        BeanUtils.copyProperties(orders, orderVO);
+        orderVO.setOrderDetailList(orderDetails);
+        return orderVO;
+    }
+
+
+    public OrderStatisticsVO statistics(){
+        Long userId = BaseContext.getCurrentId();
+        OrderStatisticsVO orderStatisticsVO = new OrderStatisticsVO();
+        orderStatisticsVO.setConfirmed(orderMapper.statistics(userId, Orders.CONFIRMED)); //待派送
+        orderStatisticsVO.setDeliveryInProgress(orderMapper.statistics(userId, Orders.DELIVERY_IN_PROGRESS)); //派送中
+        orderStatisticsVO.setToBeConfirmed(orderMapper.statistics(userId, Orders.TO_BE_CONFIRMED)); //待接单
+        return orderStatisticsVO;
+    }
+
+    /**
+     * 取消订单
+     * @param ordersCancelDTO
+     */
+    public void cancel(OrdersCancelDTO ordersCancelDTO){
+        Orders order = orderMapper.getById(ordersCancelDTO.getId());
+        if(order == null){
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        if(order.getPayStatus() == Orders.PAID){
+            order.setPayStatus(Orders.UN_PAID);
+        }
+        order.setStatus(Orders.CANCELLED);
+        order.setCancelTime(LocalDateTime.now());
+        order.setCancelReason(ordersCancelDTO.getCancelReason());
+        orderMapper.update(order);
+    }
+
+    public void confirm(OrdersConfirmDTO ordersConfirmDTO){
+        Orders order = orderMapper.getById(ordersConfirmDTO.getId());
+        if(order == null){
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        order.setStatus(Orders.CONFIRMED);
+        orderMapper.update(order);
+    }
+
+    public void rejection(OrdersRejectionDTO ordersRejectionDTO){
+        Orders order = orderMapper.getById(ordersRejectionDTO.getId());
+        if(order == null){
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        if(order.getStatus() != Orders.TO_BE_CONFIRMED){
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        if(order.getPayStatus() == Orders.PAID){
+            // 如果用户已经支付了，为用户退款
+            order.setPayStatus(Orders.UN_PAID);
+        }
+        order.setStatus(Orders.CANCELLED);
+        order.setCancelTime(LocalDateTime.now());
+        order.setRejectionReason(ordersRejectionDTO.getRejectionReason());
+        orderMapper.update(order);
+    }
+
+    public void delivery(Long id){
+        Orders order = orderMapper.getById(id);
+        if(order == null){
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        if(order.getStatus() != Orders.CONFIRMED){
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        order.setStatus(Orders.DELIVERY_IN_PROGRESS);
+        orderMapper.update(order);
+    }
+
+    public void complete(Long id){
+        Orders order = orderMapper.getById(id);
+        if(order == null){
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        if(order.getStatus() != Orders.DELIVERY_IN_PROGRESS){
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        order.setStatus(Orders.COMPLETED);
+        orderMapper.update(order);
     }
 }

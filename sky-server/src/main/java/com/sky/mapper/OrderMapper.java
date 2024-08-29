@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface OrderMapper {
@@ -92,4 +93,8 @@ public interface OrderMapper {
      */
     Page<Orders> pageQuery(OrdersPageQueryDTO ordersPageQueryDTO);
 
+    @Select("select count(*) from orders where user_id = #{userId} and status = #{status}")
+    Integer statistics(Long userId, Integer status);
+
+    Double sumByMap(Map map);
 }

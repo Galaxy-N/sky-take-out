@@ -16,8 +16,8 @@ public class OrderTask {
 
     @Autowired
     private OrderMapper orderMapper;
-    @Scheduled(cron = "0/5 * * * * ?")
-    //@Scheduled(cron = "0 * * * * ? ") //每分钟触发一次
+    //@Scheduled(cron = "0/5 * * * * ?")
+    @Scheduled(cron = "0 * * * * ? ") //每分钟触发一次
     public void processTimeoutOrder(){
         log.info("定时处理超时订单：{}", LocalDateTime.now());
         LocalDateTime time = LocalDateTime.now().plusMinutes(-15);
@@ -36,8 +36,8 @@ public class OrderTask {
     /**
      * 处理一直处理派送中的订单
      */
-    @Scheduled(cron = "2/5 * * * * ?")
-    //@Scheduled(cron = "0 0 1 * * ?") // 每天凌晨一点
+    //@Scheduled(cron = "2/5 * * * * ?")
+    @Scheduled(cron = "0 0 1 * * ?") // 每天凌晨一点
     public void processDeliveryOrder(){
         log.info("定时处理处于派送中的订单： {}", LocalDateTime.now());
         LocalDateTime time = LocalDateTime.now().plusMinutes(-60);

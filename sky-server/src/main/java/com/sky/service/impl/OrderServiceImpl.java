@@ -2,6 +2,7 @@ package com.sky.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.ser.Serializers;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
@@ -280,6 +281,56 @@ public class OrderServiceImpl implements OrderService {
         List<OrderDetail> orderDetail = orderDetailMapper.getByOrderId(id);
         orderVO.setOrderDetailList(orderDetail);
         return orderVO;
+    }
+
+    /**
+     * 取消订单
+     * @param id
+     */
+    public void cancel(Long id) {
+        Orders orders = orderMapper.getById(id);
+
+        // 检查订单是否存在
+        if(orders == null){
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        //订单状态 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消
+        if(orders.getStatus()>2){
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        // 如果在待接单状态下取消，需要给用户退款
+        if(orders.getStatus().equals(Orders.TO_BE_CONFIRMED)){
+            orders.setPayStatus(Orders.REFUND);
+        }
+        orders.setCancelTime(LocalDateTime.now());
+        orders.setStatus(Orders.CANCELLED);
+        orders.setCancelReason("用户取消订单");
+        orderMapper.update(orders);
+    }
+
+    /**
+     * 再来一单
+     * @param id
+     */
+    public void repetition(Long id) {
+        Long userId = BaseContext.getCurrentId();
+
+        List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(id);
+        log.info("{}",orderDetails);
+        List<ShoppingCart> shoppingCarts = new ArrayList<>();
+        if(orderDetails == null || orderDetails.size() ==0){
+            throw new OrderBusinessException("订单信息错误！");
+        }
+        for(OrderDetail orderDetail:orderDetails){
+            ShoppingCart shoppingCart = new ShoppingCart();
+            shoppingCart.setCreateTime(LocalDateTime.now());
+            shoppingCart.setUserId(userId);
+            BeanUtils.copyProperties(orderDetail, shoppingCart);
+            shoppingCarts.add(shoppingCart);
+        }
+        shoppingCartMapper.insertBatch(shoppingCarts);
     }
 
     /**

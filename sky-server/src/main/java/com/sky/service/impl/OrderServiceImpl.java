@@ -355,4 +355,19 @@ public class OrderServiceImpl implements OrderService {
         return new PageResult(page.getTotal(), orderVOS);
     }
 
+
+    public PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO){
+        PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
+        Page<Orders> orders = orderMapper.pageQuery(ordersPageQueryDTO);
+        List<OrderVO> orderVOS= new ArrayList<>();
+        for(Orders o : orders){
+            OrderVO orderVO = new OrderVO();
+            BeanUtils.copyProperties(o, orderVO);
+            List<OrderDetail> orderDetail = orderDetailMapper.getByOrderId(orderVO.getId());
+            orderVO.setOrderDishes(orderDetail.toString());
+            orderVOS.add(orderVO);
+        }
+        log.info("订单查询：{}",orderVOS);
+        return new PageResult(orderVOS.size(), orderVOS);
+    }
 }

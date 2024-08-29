@@ -70,4 +70,6 @@ public interface OrderService {
      * @param id
      */
     void repetition(Long id);
+
+    PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO);
 }

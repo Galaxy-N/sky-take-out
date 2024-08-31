@@ -97,4 +97,6 @@ public interface OrderMapper {
     Integer statistics(Long userId, Integer status);
 
     Double sumByMap(Map map);
+
+    Integer countByMap(Map map);
 }

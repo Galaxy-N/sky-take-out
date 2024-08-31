@@ -356,6 +356,7 @@ public class OrderServiceImpl implements OrderService {
 
     public PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO){
         PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
+        log.info("搜索订单：");
         Page<Orders> orders = orderMapper.pageQuery(ordersPageQueryDTO);
         List<OrderVO> orderVOS= new ArrayList<>();
         for(Orders o : orders){
